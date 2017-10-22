@@ -1,0 +1,16 @@
+EQ=1
+BUY=2
+SELL=3
+AT=4
+FOR=5
+LPRICE=6
+ID=7
+INT=8
+NEWLINE=9
+WS=10
+'='=1
+'buy'=2
+'sell'=3
+'@'=4
+'for'=5
+'limitprice'=6
