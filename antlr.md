@@ -1,7 +1,9 @@
 <http://www.antlr.org/download.html>
+
 <http://www.antlr.org/download/antlr-4.7-complete.jar>
 
 tree layout: <http://code.google.com/p/treelayout>
+
 StringTemplate: <http://www.stringtemplate.org>
 
 ```
@@ -570,6 +572,11 @@ public class ExtractInterfaceListener extends JavaBaseListener {
         }
         String args = tokens.getText(ctx.formalParameters());
         System.out.println("\t"+type+" "+ctx.Identifier()+args+";");
+    }
+    
+    @Override
+    public void enterImportDeclaration(JavaParser.ImportDeclarationContext ctx) {
+        System.out.println(parser.getTokenStream().getText(ctx));
     }
 }
 
