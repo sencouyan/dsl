@@ -184,6 +184,8 @@ public class Translate {
 }
 ```
 
+## 4.1 
+
 Expr.g4
 ```
 grammar Expr;
@@ -282,6 +284,8 @@ grun LibExpr prog -tree
 3+4
 EOF
 ```
+
+## 4.2 Building a Calculator Using a Visitor
 
 LabeledExpr.g4
 ```
@@ -538,6 +542,8 @@ WS  :   [ \t]+ -> skip ; // toss out whitespace
 
 ```
 
+## 4.3 Building a Translator with a Listener
+
 Java.g4
 
 ExtractInterfaceListener.java
@@ -620,5 +626,105 @@ public class ExtractInterfaceTool {
 antlr4 Java.g4
 javac *.java
 java ExtractInterfaceTool Demo.java
+```
+
+## Embedding Arbitrary Actions in a Grammar
+
+t.rows
+```
+parrt	Terence Parr	101
+tombu	Tom Burns	020
+bke	Kevin Edgar	008
+```
+
+Rows.g4
+```
+grammar Rows;
+
+@parser::members { // add members to generated RowsParser
+    int col;
+    public RowsParser(TokenStream input, int col) { // custom constructor
+        this(input);
+        this.col = col;
+    }
+}
+
+file: (row NL)+ ;
+
+row
+locals [int i=0]
+    : (   STUFF
+          {
+          $i++;
+          if ( $i == col ) System.out.println($STUFF.text);
+          }
+      )+
+    ;
+
+TAB  :  '\t' -> skip ;   // match but don't pass to the parser
+NL   :  '\r'? '\n' ;     // match and pass to the parser
+STUFF:  ~[\t\r\n]+ ;     // match any chars except tab, newline
+```
+
+Col.java
+```java
+import org.antlr.v4.runtime.ANTLRInputStream;
+import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.Token;
+
+import java.io.FileInputStream;
+import java.io.InputStream;
+
+public class Col {
+    public static void main(String[] args) throws Exception {
+        ANTLRInputStream input = new ANTLRInputStream(System.in);
+        RowsLexer lexer = new RowsLexer(input);
+        CommonTokenStream tokens = new CommonTokenStream(lexer);
+        int col = Integer.valueOf(args[0]);
+        System.out.println(col);
+        RowsParser parser = new RowsParser(tokens, col); // pass column number!
+        parser.setBuildParseTree(false); // don't waste time bulding a tree
+        parser.file(); // parse
+    }
+}
+```
+
+```
+antlr4 -no-listener Rows.g4
+javac *.java
+java Col 1 < t.rows
+java Col 2 < t.rows
+java Col 3 < t.rows
+```
+
+## Altering the Parse with Semantic Predicates
+
+t.data
+```
+2 9 10 3 1 2 3
+```
+
+Data.g4
+```
+grammar Data;
+
+file : group+ ;
+
+group: INT sequence[$INT.int] ;
+
+sequence[int n]
+locals [int i = 1;]
+     : ( {$i<=$n}? INT {$i++;} )* // match n integers
+     ;
+     
+INT :   [0-9]+ ;             // match integers
+WS  :   [ \t\n\r]+ -> skip ; // toss out all whitespace
+```
+
+```
+antlr4 -no-listener Data.g4
+javac *.java
+grun Data file -tree t.data
 ```
 
